@@ -33,7 +33,7 @@ export async function mountController(app:HTMLElement,code:string){
   const screenAngle=()=>screen.orientation?.angle ?? (typeof window.orientation==='number'?window.orientation:0);
   client.onStatus=(status,connected)=>{$('remote-status').textContent=status;$('remote-dot').classList.toggle('connected',connected);$('start-remote').toggleAttribute('disabled',!connected);};
   client.onTelemetry=t=>{$('remote-speed').textContent=String(Math.round(t.speed)).padStart(3,'0');$('remote-health').textContent=String(Math.round(t.health));$('remote-mission').textContent=t.phase==='playing'?`檢查點 ${t.checkpoint}/${t.total} · ${Math.ceil(t.time)}s`:t.phase==='won'?'任務完成！':t.phase==='lost'?'任務失敗，重新挑戰':t.phase==='paused'?'遊戲已暫停':t.phase==='free'?'自由駕駛':'等待開始';$('start-remote').textContent=['won','lost'].includes(t.phase)?'重新挑戰':'開始任務';};
-  const showDrive=()=>{$('remote-setup').classList.add('hidden');$('remote-drive').classList.remove('hidden');};
+  const showDrive=()=>{$('remote-setup').classList.add('hidden');$('remote-drive').classList.remove('hidden');if(client.connected)$('remote-status').textContent=touch?'已連線 · 觸控方向控制':'已連線 · 體感方向控制';};
   const calibrate=()=>{baseline=raw;filtered=0;input.steer=0;if(sensor&&lastMotion)touch=false;$('drive-note').textContent='已校正目前姿勢。左右傾斜手機即可轉向。';};
   const handleMotion=(e:DeviceMotionEvent)=>{const a=e.accelerationIncludingGravity;if(a?.x==null||a.y==null)return;raw=gravityTilt(a.x,a.y,screenAngle());lastMotion=performance.now();sensorType='陀螺儀／重力姿態';};
   const handleOrientation=(e:DeviceOrientationEvent)=>{if(performance.now()-lastMotion<250||e.beta==null||e.gamma==null)return;raw=orientationTilt(e.beta,e.gamma,screenAngle());lastMotion=performance.now();sensorType='姿態感測';};

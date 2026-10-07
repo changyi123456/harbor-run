@@ -5,12 +5,13 @@ export interface Telemetry { type:'telemetry'; speed:number; health:number; nitr
 export class RemoteHost {
   peer?:Peer; connection?:DataConnection; code=''; status='尚未建立房間';
   onStatus?:(status:string,connected:boolean)=>void; onInput?:(input:Input)=>void; onAction?:(action:string)=>void;
-  lastSequence=-1; lastSeen=0; private timeout?:ReturnType<typeof setTimeout>;
+  lastSequence=-1; lastSeen=0; private timeout?:ReturnType<typeof setTimeout>;private heartbeat?:ReturnType<typeof setInterval>;
   async open(){
     if(this.peer&&!this.peer.destroyed)return this.code;
     const {Peer}=await import('peerjs');
     this.code=Array.from(crypto.getRandomValues(new Uint8Array(12)),v=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[v%32]).join('');
     this.peer=new Peer(`harbor-v1-${this.code}`,{secure:true,debug:0});
+    this.heartbeat=setInterval(()=>{if(this.connection?.open&&performance.now()-this.lastSeen>3000)this.connection.close();},500);
     this.setStatus('正在建立安全配對…',false);
     this.timeout=setTimeout(()=>this.setStatus('配對服務較慢，請稍候或重試。鍵盤仍可遊玩。',false),12000);
     this.peer.on('open',()=>{clearTimeout(this.timeout);this.setStatus('等待手機掃碼連線',false);});
@@ -34,8 +35,13 @@ export class RemoteHost {
   }
   setStatus(status:string,connected:boolean){this.status=status;this.onStatus?.(status,connected);}
   url(){const url=new URL(location.href);url.search='';url.hash='';url.searchParams.set('controller',this.code);return url.href;}
-  telemetry(data:Telemetry){if(this.connection?.open&&this.connection.dataChannel?.bufferedAmount<16384)this.connection.send(data);}
-  reset(){this.connection?.close();this.peer?.destroy();this.peer=undefined;clearTimeout(this.timeout);this.code='';this.lastSequence=-1;}
+  telemetry(data:Telemetry){
+    if(!this.connection?.open)return;
+    // A vanished tab may leave SCTP open briefly without emitting close.
+    if(performance.now()-this.lastSeen>3000){this.connection.close();return;}
+    if(this.connection.dataChannel?.bufferedAmount<16384)this.connection.send(data);
+  }
+  reset(){this.connection?.close();this.peer?.destroy();this.peer=undefined;clearTimeout(this.timeout);clearInterval(this.heartbeat);this.code='';this.lastSequence=-1;}
 }
 export class RemoteClient {
   peer?:Peer;connection?:DataConnection;sequence=0;connected=false;
