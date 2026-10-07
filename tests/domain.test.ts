@@ -1,0 +1,9 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createVehicle, stepVehicle, ZERO_INPUT, Mission, CHECKPOINTS } from '../src/game/simulation.ts';
+import { readInputPacket, gravityTilt } from '../src/platform/protocol.ts';
+test('accelerating and steering changes position in the correct direction',()=>{const v=createVehicle();for(let i=0;i<180;i++)stepVehicle(v,{...ZERO_INPUT,throttle:1},1/60,[]);assert.ok(v.z<125);assert.ok(v.speed>15);for(let i=0;i<60;i++)stepVehicle(v,{...ZERO_INPUT,steer:1,throttle:1},1/60,[]);assert.ok(v.x>190);});
+test('collision resolves penetration and damages fast impacts without non-finite state',()=>{const v=createVehicle();v.x=0;v.z=5;v.vz=-25;const wall={x:0,z:0,hx:5,hz:2};for(let i=0;i<60;i++)stepVehicle(v,ZERO_INPUT,1/60,[wall]);assert.ok(v.health<100);assert.ok(v.z>=3.24);assert.ok(Number.isFinite(v.vz));});
+test('mission only advances active checkpoints, wins and can restart',()=>{const m=new Mission();const v=createVehicle();m.start();for(const c of CHECKPOINTS){v.x=c.x;v.z=c.z;assert.equal(m.update(v,.1),true);}assert.equal(m.phase,'won');m.start();assert.equal(m.index,0);m.time=.001;m.update(createVehicle(),.1);assert.equal(m.phase,'lost');});
+test('network rejects stale, malformed and NaN controls, clamps finite inputs',()=>{assert.equal(readInputPacket({type:'input',sequence:1,input:{...ZERO_INPUT,steer:NaN}},0),null);assert.equal(readInputPacket({type:'input',sequence:1,input:ZERO_INPUT},1),null);assert.equal(readInputPacket({type:'input',sequence:2,input:{...ZERO_INPUT,steer:9}},0)?.input.steer,1);assert.equal(readInputPacket('bad',0),null);});
+test('gravity steering accounts for screen rotation',()=>{assert.equal(gravityTilt(0,9.8,0),0);assert.ok(gravityTilt(4,8,0)>20);assert.ok(Math.abs(gravityTilt(-9.8,0,90))<.001);});
