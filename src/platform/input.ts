@@ -5,8 +5,13 @@ export class InputManager {
   constructor(){
     window.addEventListener('keydown',e=>{
       if(e.target instanceof HTMLInputElement||e.target instanceof HTMLSelectElement)return;
+      if(e.code==='Escape'){
+        // Existing dialogs handle Escape through their native cancel event.
+        if(document.querySelector('dialog[open]'))return;
+        e.preventDefault();if(!e.repeat)this.onPause?.();return;
+      }
       if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
-      if(!e.repeat&&e.code==='Escape')this.onPause?.();if(!e.repeat&&e.code==='KeyR')this.onReset?.();this.keys.add(e.code);
+      if(!e.repeat&&e.code==='KeyR')this.onReset?.();this.keys.add(e.code);
     });
     window.addEventListener('keyup',e=>this.keys.delete(e.code));
     window.addEventListener('blur',()=>this.clear());
