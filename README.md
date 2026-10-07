@@ -8,11 +8,14 @@
 
 1. 電腦開啟遊戲，讀完畫面上的操作指引，按「連接手機」。
 2. 手機掃描 QR Code，用 Safari 或 Chrome 開啟連結。
-3. 橫拿手機，按「啟用體感並校正」，允許動作感測權限，保持舒服的握姿約一秒。
-4. 按「開始任務」。左右傾斜轉向，按住油門加速；其他按鈕控制煞車、手煞車、倒車和氮氣。
-5. 改變握姿後按「重新校正」。沒有感測器時可用「使用觸控方向控制」。
+3. iPhone 若已開啟「直向鎖定」，在控制頁右上「介面方向」選「橫向：手機頂端朝左／朝右」，依實際握法選擇。未鎖定時可用「跟隨螢幕」。
+4. 按「啟用體感控制」，允許動作感測權限。橫拿手機，螢幕稍微立起朝向你，擺好你想當作正中央的握姿，再按「確定校正為 0°」。握穩約一秒，等到畫面顯示「校正完成」，這個姿勢就成為 0°。
+5. 按「開始任務」。右傾右轉、左傾左轉，按住油門加速；其他按鈕控制煞車、手煞車、倒車和氮氣。
+6. 改變握姿後按「重新校正 0°」；改變介面方向後重新確認中央。收不到資料、手機仍在移動或放得太平時會顯示原因。也提供「反轉體感方向」選項與觸控方向備援。
 
 手機與電腦建議先使用同一個 Wi-Fi。體感需要 HTTPS；GitHub Pages 提供 HTTPS。限制 WebRTC 的網路可能連不上，請換網路。公共 PeerJS 信令服務是外部依賴，本版沒有專用 TURN 中繼。切換 App／鎖屏會停止控制，斷線時遊戲會暫停。
+
+手動橫向會旋轉網頁控制介面，並同步轉向感測座標；不需改變 iPhone 的系統方向鎖定。校正至少採集六筆連續且穩定的資料，涵蓋 600ms，五秒內未完成則提示重試。
 
 ## 鍵盤與玩法
 
@@ -70,6 +73,8 @@ blender --background --python art-source/optimize_models.py
 
 - [MDN：Device orientation events](https://developer.mozilla.org/en-US/docs/Web/API/Device_orientation_events/Detecting_device_orientation)
 - [W3C：Device Orientation and Motion](https://www.w3.org/TR/orientation-event/)
+- [W3C：Screen Orientation](https://www.w3.org/TR/screen-orientation/)
+- [Apple：iPhone 螢幕旋轉與直向鎖定](https://support.apple.com/en-gb/118226)
 - [PeerJS API](https://peerjs.com/docs/)
 - [Babylon.js：glTF import](https://doc.babylonjs.com/features/featuresDeepDive/importers/glTF/)
 - [GitHub Pages 自訂工作流程](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)

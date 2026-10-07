@@ -12,11 +12,20 @@ export function readInputPacket(data:unknown,previousSequence:number):ControlsPa
 }
 export function gravityTilt(x:number,y:number,screenAngle:number){
   const a=screenAngle*Math.PI/180;
-  const across=x*Math.cos(a)+y*Math.sin(a);
-  const upward=-x*Math.sin(a)+y*Math.cos(a);
-  return Math.atan2(across,Math.max(1,Math.abs(upward)))*180/Math.PI;
+  // Screen orientation is counter-clockwise from the device's natural frame.
+  // Keep the signed vertical component: taking abs() reverses devices that
+  // report gravity with the opposite polarity. Relative angles handle both.
+  const across=x*Math.cos(a)-y*Math.sin(a);
+  const upward=x*Math.sin(a)+y*Math.cos(a);
+  return wrapDegrees(-Math.atan2(across,upward)*180/Math.PI);
+}
+export function wrapDegrees(angle:number){return ((angle+180)%360+360)%360-180;}
+export function relativeTilt(angle:number,baseline:number){return wrapDegrees(angle-baseline);}
+export function orientationGravity(beta:number,gamma:number){
+  const b=beta*Math.PI/180,g=gamma*Math.PI/180;
+  return {x:-Math.sin(g)*Math.cos(b)*9.8,y:Math.sin(b)*9.8};
 }
 export function orientationTilt(beta:number,gamma:number,screenAngle:number){
-  const b=beta*Math.PI/180,g=gamma*Math.PI/180;
-  return gravityTilt(-Math.sin(g)*Math.cos(b)*9.8,Math.sin(b)*9.8,screenAngle);
+  const v=orientationGravity(beta,gamma);
+  return gravityTilt(v.x,v.y,screenAngle);
 }
