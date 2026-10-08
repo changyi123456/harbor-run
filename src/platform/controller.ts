@@ -20,13 +20,15 @@ export async function mountController(app:HTMLElement,code:string){
     </section>
     <section class="remote-drive hidden" id="remote-drive">
       <div class="remote-metrics"><div><b id="remote-speed">000</b><span>km/h</span></div><div class="remote-mission" id="remote-mission">等待開始</div><div><b id="remote-health">100</b><span>車體耐久</span></div></div>
-      <div class="steering-readout"><div class="steering-track"><span id="steer-marker"></span></div><span id="tilt-value">0°</span><span id="sensor-state">體感未啟用</span></div>
+      <div class="calibration-bar">
+        <div class="calibration-info"><div class="steering-readout"><div class="steering-track"><span id="steer-marker"></span></div><span id="tilt-value">0°</span><span id="sensor-state">體感未啟用</span></div><p class="calibration-note" id="drive-note" role="status">擺好正中央的握姿，再按右側校正按鈕。</p></div>
+        <button id="calibrate" class="calibration-button" aria-label="確定校正為 0°" aria-describedby="calibrate-hint"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="9"/><circle cx="16" cy="16" r="3"/><path d="M16 2v5m0 18v5M2 16h5m18 0h5"/></svg><span class="calibration-copy"><span id="calibrate-label">確定校正為 0°</span><small id="calibrate-hint">把目前握姿設為中央</small></span></button>
+      </div>
       <div class="remote-controls"><button id="pedal-brake" class="pedal brake">煞車<span>按住減速</span></button><div class="steer-buttons" id="steer-buttons"><button id="steer-left" aria-label="向左">◀</button><button id="steer-right" aria-label="向右">▶</button></div><button id="pedal-gas" class="pedal gas">油門<span>按住加速</span></button></div>
       <div class="remote-secondary"><button id="pedal-handbrake" class="button secondary">手煞車</button><button id="pedal-nitro" class="button nitro">氮氣加速</button><button id="reverse" class="button secondary">倒車</button></div>
-      <div class="remote-tools"><button id="start-remote" class="button primary">開始任務</button><button id="pause-remote" class="text-button">暫停／繼續</button><button id="calibrate" class="text-button">確定校正為 0°</button><button id="remote-settings" class="text-button">設定</button></div>
+      <div class="remote-tools"><button id="start-remote" class="button primary">開始任務</button><button id="pause-remote" class="text-button">暫停／繼續</button><button id="remote-settings" class="text-button">設定</button></div>
       <label class="sensitivity" for="sensitivity">轉向敏感度<input id="sensitivity" type="range" min="15" max="60" value="32"/><span>低 → 高</span></label>
       <label class="invert-control"><input id="invert-steering" type="checkbox"/>反轉體感方向<span>正常為右傾 → 右轉</span></label>
-      <p class="calibration-note" id="drive-note" role="status">左右傾斜轉向；手持姿勢改變時，請重新校正。</p>
     </section>
     <footer class="remote-footer">保持螢幕開啟 · 切換 App 或鎖屏會停止輸入</footer>
   </main>`;
@@ -121,7 +123,9 @@ export async function mountController(app:HTMLElement,code:string){
         $('drive-note').textContent=reading.phase==='ready'&&inverted?'校正完成 ✓　目前姿勢為 0°，已反轉體感方向。':messages[reading.phase];
       }else if(touch)$('drive-note').textContent=messages.idle;
       if(permissionMessage)$('drive-note').textContent=permissionMessage;
-      $('calibrate').textContent=sensor&&!touch&&reading.phase==='collecting'?'重新開始校正':steering.calibrated?'重新校正 0°':'確定校正為 0°';
+      const label=sensor&&!touch&&reading.phase==='collecting'?'重新開始校正':steering.calibrated?'重新校正 0°':'確定校正為 0°';
+      $('calibrate-label').textContent=label;$('calibrate').setAttribute('aria-label',label);
+      $('calibrate-hint').textContent=sensor&&!touch&&reading.phase==='collecting'?'約一秒，請保持手機不動':steering.calibrated?'握姿改變時再按一次':'把目前握姿設為中央';
     }
   },33);
   document.addEventListener('visibilitychange',()=>{if(document.hidden){Object.assign(input,ZERO_INPUT);client.send({...ZERO_INPUT,brake:1});}else if(sensor||touch)void keepAwake();});
